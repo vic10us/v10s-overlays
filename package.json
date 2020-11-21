@@ -1,0 +1,81 @@
+{
+  "scripts": {
+    "lint:eslint": "eslint --ext .ts,.html . --ignore-path .gitignore",
+    "format:eslint": "eslint --ext .ts,.html . --fix --ignore-path .gitignore",
+    "lint:prettier": "prettier \"**/*.js\" \"**/*.ts\" --check --ignore-path .gitignore",
+    "format:prettier": "prettier \"**/*.js\" \"**/*.ts\" --write --ignore-path .gitignore",
+    "lint": "npm run lint:eslint && npm run lint:prettier",
+    "format": "npm run format:eslint && npm run format:prettier",
+    "build": "rimraf dist && tsc && rollup -c rollup.config.js",
+    "start:build": "npm run build && web-dev-server --root-dir dist --app-index index.html --open --compatibility none",
+    "start": "concurrently --kill-others --names tsc,web-dev-server \"npm run tsc:watch\" \"web-dev-server --app-index index.html --node-resolve --open --watch\"",
+    "tsc:watch": "tsc --watch",
+    "dev": "parcel serve index.html"
+  },
+  "devDependencies": {
+    "@open-wc/building-rollup": "^1.0.0",
+    "@open-wc/eslint-config": "^4.0.0",
+    "@rollup/plugin-commonjs": "^16.0.0",
+    "@rollup/plugin-node-resolve": "^10.0.0",
+    "@types/node": "13.11.1",
+    "@types/p5": "^0.9.1",
+    "@types/react": "^16.9.49",
+    "@types/react-dom": "^16.9.8",
+    "@typescript-eslint/eslint-plugin": "^2.20.0",
+    "@typescript-eslint/parser": "^2.20.0",
+    "@web/dev-server": "^0.0.12",
+    "@web/rollup-plugin-copy": "^0.2.0",
+    "@web/rollup-plugin-import-meta-assets": "^1.0.4",
+    "concurrently": "^5.1.0",
+    "deepmerge": "^4.2.2",
+    "eslint": "^6.1.0",
+    "eslint-config-prettier": "^6.11.0",
+    "husky": "^1.0.0",
+    "lint-staged": "^10.0.0",
+    "parcel": "^1.12.4",
+    "prettier": "^2.0.4",
+    "rimraf": "^2.6.3",
+    "rollup": "^2.3.4",
+    "tslib": "^1.11.0",
+    "typescript": "~4.0.5"
+  },
+  "eslintConfig": {
+    "extends": [
+      "@open-wc/eslint-config",
+      "eslint-config-prettier"
+    ]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "arrowParens": "avoid"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "name": "v10s-overlays",
+  "version": "0.0.1",
+  "description": "Webcomponent v10s-overlays following open-wc recommendations",
+  "author": "v10s-overlays",
+  "license": "MIT",
+  "dependencies": {
+    "@microsoft/signalr": "^5.0.0",
+    "@ryannhg/safe-json": "^0.1.0",
+    "@vaadin/router": "^1.7.2",
+    "lit-element": "^2.0.1",
+    "lit-html": "^1.0.0",
+    "p5": "^1.1.9",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-scripts": "3.4.3",
+    "three": "^0.122.0"
+  }
+}
