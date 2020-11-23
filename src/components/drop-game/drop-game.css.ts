@@ -32,6 +32,18 @@ export const style = () => css`
     left: 50%;
     transform: translateX(-50%) scaleY(0.9);
     filter: drop-shadow(5px 5px 5px #222);
+    z-index: -100;
+}
+
+.target2 {
+    position: fixed;
+    width: 30vmin;
+    bottom: -7vmin;
+    height: auto;
+    left: 50%;
+    transform: translateX(-50%) scaleY(0.5);
+    filter: drop-shadow(5px 5px 5px #222);
+    z-index: 1000;
 }
 
 .drop {
