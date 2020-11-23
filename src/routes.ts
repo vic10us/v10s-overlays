@@ -25,6 +25,7 @@ export const routes = [
     action: async (ctx: Context, cmd: Commands) => {
       await import('./overlays/messages');
       let component = cmd.component('v10s-messages-overlay') as unknown as MessagesOverlay;
+      console.log(component);
       component.webServiceType = SocketType.signalR;
       component.webServiceUrl = 'http://localhost:5000/twitchHub';
       return component;
@@ -42,43 +43,4 @@ export const routes = [
     path: '(.*)',
     component: 'not-found',
   }
-];
-
-export const oldRoutes = [
-  {
-    path: '/',
-    component: 'v10s-overlays',
-    children: [
-      {
-        path: 'drops',
-        action: async (ctx: Context, cmd: Commands) => {
-          await import('./overlays/drops');
-          let component = cmd.component('v10s-drops-overlay') as unknown as DropsOverlay;
-          return component;
-        },
-      },
-      {
-        path: 'messages',
-        action: async (ctx: Context, cmd: Commands) => {
-          await import('./overlays/messages');
-          let component = cmd.component('v10s-messages-overlay') as unknown as MessagesOverlay;
-          component.webServiceType = SocketType.signalR;
-          component.webServiceUrl = 'http://localhost:5000/twitchHub';
-          return component;
-        },
-      },
-      {
-        path: 'weather',
-        action: async (ctx: Context, cmd: Commands) => {
-          await import('./overlays/weather');
-          let component = cmd.component('v10s-weather-overlay') as unknown as WeatherOverlay;
-          return component;
-        },
-      },
-      {
-        path: '(.*)',
-        component: 'x-not-found-view',
-      }
-    ]
-  },
 ];
