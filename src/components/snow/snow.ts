@@ -1,17 +1,15 @@
 import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
-import { css, customElement, html, LitElement, property } from 'lit-element';
+import { customElement, LitElement, property } from 'lit-element';
 import { IChatMessage } from '../messages/models';
 import * as THREE from 'three';
 import { WebGLRenderer } from 'three';
-import { content } from './Weather.html';
-import { style } from './Weather.css';
-// import snowFlakeImage from './images/cTALZ.png';
+import { content } from './snow.html';
+import { style } from './snow.css';
 
-@customElement('v10s-weather')
-export class V10sWeather extends LitElement {
+@customElement('v10s-snow')
+export class V10sSnow extends LitElement {
 
   @property({ type: String }) webServiceUrl!: string;
-  particleImage!: HTMLImageElement;
   threeCanvas!: HTMLElement;
   camera!: THREE.PerspectiveCamera;
   scene!: THREE.Scene;
@@ -114,7 +112,7 @@ export class V10sWeather extends LitElement {
 
   pause: boolean = false;
 
-  fadeParticlesBy = (amt: number) => {
+  fadeParticlesBy = () => {
     this.particles.material.opacity = 0;
 
   }
@@ -211,7 +209,7 @@ export class V10sWeather extends LitElement {
         }
       })
       .build();
-    connection.on("ReceiveChatMessage", (event: IChatMessage, uo: any) => {
+    connection.on("ReceiveChatMessage", (event: IChatMessage) => {
       console.log(`Got a message: ${event}`);
     });
 

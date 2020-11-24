@@ -23,6 +23,10 @@
   
     --global-transition-time: 0.2s;
   }
+
+  #outlet {
+    margin: 0;
+  }
   
   html,
   body {
