@@ -2,8 +2,9 @@ import { SocketType } from './components/types';
 import { Context, Commands } from '@vaadin/router';
 import { MessagesOverlay } from './overlays/messages';
 import { DropsOverlay } from './overlays/drops';
-import { WeatherOverlay } from './overlays/weather';
+import { SnowOverlay } from './overlays/snow';
 import './overlays/not-found';
+import { RainOverlay } from './overlays/rain';
 
 export const routes = [
   {
@@ -32,10 +33,18 @@ export const routes = [
     },
   },
   {
-    path: 'weather',
+    path: 'snow',
     action: async (ctx: Context, cmd: Commands) => {
-      await import('./overlays/weather');
-      let component = cmd.component('v10s-weather-overlay') as unknown as WeatherOverlay;
+      await import('./overlays/snow');
+      let component = cmd.component('v10s-snow-overlay') as unknown as SnowOverlay;
+      return component;
+    },
+  },
+  {
+    path: 'rain',
+    action: async (ctx: Context, cmd: Commands) => {
+      await import('./overlays/rain');
+      let component = cmd.component('v10s-rain-overlay') as unknown as RainOverlay;
       return component;
     },
   },

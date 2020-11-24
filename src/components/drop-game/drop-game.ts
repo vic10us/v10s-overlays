@@ -76,7 +76,7 @@ export class DropGame extends LitElement {
         this.drops.push(drop);
         this.shadowRoot?.appendChild(element);
         this.updateDropPosition(drop);
-    };
+    }
 
     updateDropPosition = (drop: DropInstance) => {
         if (drop.landed) return;
@@ -84,23 +84,34 @@ export class DropGame extends LitElement {
         drop!.element!.style.left = drop.getLeft() + 'px';
     }
 
+    paraChutes: string[] = [
+        'parachute-red-snow.png',
+        'parachute-green-snow.png',
+        'parachute-blue-snow.png',
+        'parachute-orange-snow.png'
+    ];
+
+    getRandomParachute = () : string => {
+        const random = Math.floor(Math.random() * this.paraChutes.length);
+        return this.paraChutes[random];
+    }
+
     createDropElement = (dropParams: DropParams) : HTMLDivElement => {
         const div = document.createElement('div');
-        const parachute = 'images/parachute.png';//new URL('./images/parachute.png', import.meta.url).href;
+        const parachute = `images/${this.getRandomParachute()}`; // 'images/parachute-blue-snow.png';//new URL('./images/parachute.png', import.meta.url).href;
         const seed = 'images/seed.png'; // new URL('./images/seed.png', import.meta.url).href;
         div.className = 'drop';
         div.innerHTML = `
-      <h4 class="username">${dropParams.username}</h4>
-      <img class="chute" src="${parachute}" alt="">
-      <div class="user-image">
-        <img class="${dropParams.isAvatar ? 'avatar' : ''}" src="${dropParams.url || seed}" />
-      </div>`;
+            <h4 class="username">${dropParams.username}</h4>
+            <img class="chute" src="${parachute}" alt="">
+            <div class="user-image">
+                <img class="${dropParams.isAvatar ? 'avatar' : ''}" src="${dropParams.url || seed}" />
+            </div>`;
         return div;
     }
 
     render() {
         return content(this);
-        // return html`<div>This is a test</div>`;
     }
 
     updateGame = () => {
