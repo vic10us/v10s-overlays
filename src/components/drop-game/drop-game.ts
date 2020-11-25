@@ -5,7 +5,7 @@ import WebSocketSocket from '../sockets/websockets';
 import { BackendEvents, DropParams, SocketType } from '../types';
 import { content } from './drop-game.html';
 import { style } from './drop-game.css';
-import { DropInstance, GameScore, Truth } from './drop-proto';
+import { DropInstance, GameScore, Truth } from './types';
 
 @customElement('v10s-drop-game')
 export class DropGame extends LitElement {
@@ -84,27 +84,33 @@ export class DropGame extends LitElement {
         drop!.element!.style.left = drop.getLeft() + 'px';
     }
 
-    paraChutes: string[] = [
-        'parachute-red-snow.png',
-        'parachute-green-snow.png',
-        'parachute-blue-snow.png',
-        'parachute-orange-snow.png'
+    parachuteColors: string[] = [
+        'red-light',
+        'red-dark',
+        'green-light',
+        'green-dark',
+        'blue-light',
+        'blue-dark',
+        'orange-light',
+        'orange-dark',
     ];
 
-    getRandomParachute = () : string => {
-        const random = Math.floor(Math.random() * this.paraChutes.length);
-        return this.paraChutes[random];
+    getRandomParachute = (size: string = 'sm') : string => {
+        const random = Math.floor(Math.random() * this.parachuteColors.length);
+        var imageName = `parachute-${this.parachuteColors[random]}-snow-${size}.png`;
+        return imageName;
     }
 
     createDropElement = (dropParams: DropParams) : HTMLDivElement => {
         const div = document.createElement('div');
-        const parachute = `images/${this.getRandomParachute()}`; // 'images/parachute-blue-snow.png';//new URL('./images/parachute.png', import.meta.url).href;
+        const parachute = `images/parachutes/${this.getRandomParachute()}`; // 'images/parachute-blue-snow.png';//new URL('./images/parachute.png', import.meta.url).href;
         const seed = 'images/seed.png'; // new URL('./images/seed.png', import.meta.url).href;
         div.className = 'drop';
         div.innerHTML = `
             <h4 class="username">${dropParams.username}</h4>
             <img class="chute" src="${parachute}" alt="">
             <div class="user-image">
+                <!-- <img class="${dropParams.isAvatar ? 'avatar' : ''}" src="${dropParams.url || seed}" /> -->
                 <img class="${dropParams.isAvatar ? 'avatar' : ''}" src="${dropParams.url || seed}" />
             </div>`;
         return div;
