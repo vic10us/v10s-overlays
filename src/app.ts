@@ -15,9 +15,10 @@ export class App extends LitElement {
   `;
 
   render() {
+    let hellostr = 'This is a test';
     return html`
       <main>
-        This is a test
+        ${hellostr}
         <slot></slot>
       </main>
   `;

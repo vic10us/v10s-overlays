@@ -10,7 +10,7 @@ export class GameScore {
 
 export interface Truth {
     [key: string]: boolean;
-};
+}
 
 export class DropInstance {
     landed: boolean = false;
@@ -46,4 +46,4 @@ export class DropInstance {
             y: (this.getTop() + this.getBottom()) / 2
         };
     }
-};
+}
