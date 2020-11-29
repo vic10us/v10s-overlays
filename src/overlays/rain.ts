@@ -1,5 +1,19 @@
 import { LitElement, html, property, customElement, css } from 'lit-element';
-import { AmbientLight, BoxGeometry, Color, Fog, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, PointsMaterial, Renderer, Scene, SphereGeometry, SpotLight, Vector3, WebGL1Renderer, WebGLRenderer } from 'three';
+import {
+    AmbientLight,
+    BoxBufferGeometry,
+    Clock,
+    Color,
+    Fog,
+    Mesh,
+    MeshBasicMaterial,
+    MeshStandardMaterial,
+    PerspectiveCamera,
+    Scene,
+    SphereBufferGeometry,
+    SpotLight,
+    WebGLRenderer
+} from 'three';
 import Sockets from '../components/sockets';
 import SignalRSocket from '../components/sockets/signalr';
 import WebSocketSocket from '../components/sockets/websockets';
@@ -8,11 +22,11 @@ import { style } from './rain.css';
 
 class WeatherElement {
     mesh: Mesh | undefined;
-    velocity: number = 1.0;
+    velocity: number = 0.5;
     opacity: number = 1.0;
-    completedAt: number | undefined;
     timeToDie: number = 1000;
     dead: boolean = false;
+    clock: Clock = new Clock();
 };
 
 @customElement('v10s-rain-overlay')
@@ -20,10 +34,10 @@ export class RainOverlay extends LitElement {
 
     @property({ type: String })
     webServiceUrl: string = "http://localhost:5000/twitchHub";
-  
+
     @property({ type: String })
     webServiceType: SocketType = SocketType.signalR;
-  
+
     socket!: SignalRSocket | WebSocketSocket;
 
     scene: Scene;
@@ -64,13 +78,13 @@ export class RainOverlay extends LitElement {
             socketType: this.webServiceType,
             reconnectTimeout: 1000,
             uri: this.webServiceUrl
-          });
-      
-          this.socket = sockets.client;
-      
-          this.socket.on(BackendEvents.message, async (event: any) => {
-              this.spawnBoxes(1000);
-          });
+        });
+
+        this.socket = sockets.client;
+
+        this.socket.on(BackendEvents.message, async (event: any) => {
+            this.spawnBoxes(500);
+        });
     }
 
     initScene = () => {
@@ -82,33 +96,35 @@ export class RainOverlay extends LitElement {
         const light = new AmbientLight(0x666666);
         this.scene.add(light);
 
-        const spotLight = new SpotLight(0x666666);
-        spotLight.distance = 2000;
-        spotLight.position.set(-200, 700, 0);
+        const spotLight = new SpotLight(0xffffff);
+        spotLight.distance = 1000;
+        spotLight.position.set(this.visibleWidthAtZDepth(0, this.camera) / 2, this.visibleHeightAtZDepth(0, this.camera), 50);
         spotLight.castShadow = true;
         this.scene.add(spotLight);
 
         this.box = new Mesh(
-            new BoxGeometry(20, 20, 20, 20, 20),
-            new MeshBasicMaterial({
+            new BoxBufferGeometry(20, 20, 20, 20, 20),
+            new MeshStandardMaterial({
                 color: 0xffffff,
                 wireframe: false
             })
         );
 
         this.box.name = 'box';
-        this.scene.add(this.box);
+        // this.scene.add(this.box);
 
         const sphere = new Mesh(
-            new SphereGeometry(15, 15, 15),
-            new MeshBasicMaterial({
+            new SphereBufferGeometry(15, 15, 15),
+            new MeshStandardMaterial({
                 color: 0x1c1cff,
-                wireframe: true
+                wireframe: false,
+                opacity: 0.8,
+                transparent: true
             })
         );
         sphere.name = 'sphere';
 
-        this.scene.add(sphere);
+        // this.scene.add(sphere);
 
         this.renderFrame(0);
     }
@@ -130,13 +146,13 @@ export class RainOverlay extends LitElement {
     }
 
     renderFrame = (e: number) => {
-        if (this.box!.position.z > this.maxZ || this.box!.position.z < this.minZ) this.incrementZ *= -1;
-        this.box!.rotation.x += 0.05;
-        this.box!.rotation.y += 0.05;
-        this.box!.rotation.z += 0.05;
-        this.box!.position.z += this.incrementZ;
-        const sphere = this.scene.getObjectByName('sphere');
-        if (sphere !== null && sphere !== undefined) sphere.rotation.y += 0.01;
+        // if (this.box!.position.z > this.maxZ || this.box!.position.z < this.minZ) this.incrementZ *= -1;
+        // this.box!.rotation.x += 0.05;
+        // this.box!.rotation.y += 0.05;
+        // this.box!.rotation.z += 0.05;
+        // this.box!.position.z += this.incrementZ;
+        // const sphere = this.scene.getObjectByName('sphere');
+        // if (sphere !== null && sphere !== undefined) sphere.rotation.y += 0.01;
         this.updateRainElements(e);
         this.renderer.render(this.scene, this.camera!);
         requestAnimationFrame((e) => this.renderFrame(e));
@@ -146,8 +162,7 @@ export class RainOverlay extends LitElement {
         this.rainElements.forEach((e, i) => {
             if (e.mesh === undefined) return;
             if (e.mesh.position.y <= -this.minY) {
-                if (e.completedAt === undefined) e.completedAt = Date.now();
-                if (Date.now() - e.completedAt >= e.timeToDie) {
+                if (e.clock.getElapsedTime() * 1000 >= e.timeToDie) {
                     e.opacity -= 0.005;
                 }
                 e.dead = e.opacity <= 0;
@@ -160,7 +175,7 @@ export class RainOverlay extends LitElement {
                 }
                 return;
             }
-            e.mesh.position.y -= 1.0;
+            e.mesh.position.y -= e.velocity;
         });
     }
 
@@ -169,7 +184,7 @@ export class RainOverlay extends LitElement {
 
     _handleClick = () => {
         console.log('Clicked ME!');
-        this.spawnBoxes(1000);
+        this.spawnBoxes(10);
     }
 
     visibleHeightAtZDepth = (depth: number, camera: PerspectiveCamera) => {
@@ -188,12 +203,12 @@ export class RainOverlay extends LitElement {
     visibleWidthAtZDepth = (depth: number, camera: PerspectiveCamera) => {
         const height = this.visibleHeightAtZDepth(depth, camera);
         return height * camera.aspect;
-    };
+    }
 
     spawnBoxes = (count: number) => {
         let newBoxes: WeatherElement[] = [];
         const color = new Color(0xff0000);
-        color.offsetHSL(Math.random(),0,0);
+        color.offsetHSL(Math.random(), 0, 0);
         for (let i = 0; i < count; i++) {
             let we = this.spawnBox(color);
             newBoxes.push(we);
@@ -207,32 +222,39 @@ export class RainOverlay extends LitElement {
         this.scene.add(...sceneObjects);
     }
 
+    randomBetween = (min: number, max: number) : number => { // min and max included 
+        return Math.random() * (max - min + 1) + min;
+    }
+
     spawnBox = (color: Color = new Color(0xff0000)): WeatherElement => {
         const we = new WeatherElement();
+
+        const dia = this.randomBetween(0.2, 3);
+
         const newBox = new Mesh(
-            new BoxGeometry(2, 2, 2),
-            new MeshBasicMaterial({
+            new SphereBufferGeometry(dia, 15, 15),
+            new MeshStandardMaterial({
                 color: color,
                 wireframe: false,
                 transparent: true,
                 opacity: we.opacity,
             }),
         );
-        
-        const offsety = Math.random() * 100;
-        newBox.position.y = this.minY + offsety;
-        
-        const invert = Math.floor(Math.random() * 2) === 1 ? 1 : -1;
-        newBox.position.x = Math.random() * this.visibleWidthAtZDepth(0, this.camera) * invert;
+
+        newBox.position.y = this.randomBetween(this.minY, this.minY + 10);
+        newBox.position.z = this.randomBetween(-15, 5);
+        const w = this.visibleWidthAtZDepth(newBox.position.z, this.camera) / 2;
+        newBox.position.x = this.randomBetween(-w, w);
 
         we.mesh = newBox;
         we.timeToDie = 5000;
+        we.velocity = this.randomBetween(0.05, 1.0);
         return we;
     }
 
     render = () => {
         return html`
-            <div><button @click="${this._handleClick}">Click Me</button></div>
+            <!-- <div><button @click="${this._handleClick}">Click Me</button></div> -->
             <div id="context"></div>
         `;
     }
