@@ -1,10 +1,11 @@
 import { LitElement, html, property, customElement, css } from 'lit-element';
 import {
     AmbientLight,
-    BoxBufferGeometry,
     Clock,
     Color,
+    DirectionalLight,
     Fog,
+    HemisphereLight,
     Mesh,
     MeshBasicMaterial,
     MeshStandardMaterial,
@@ -39,11 +40,10 @@ export class RainOverlay extends LitElement {
     webServiceType: SocketType = SocketType.signalR;
 
     socket!: SignalRSocket | WebSocketSocket;
-
+    clock: Clock;
     scene: Scene;
     renderer: WebGLRenderer;
     camera: PerspectiveCamera;
-    box: Mesh | undefined;
     container3d!: HTMLElement;
     minZ: number = -900;
     maxZ: number = 50;
@@ -55,6 +55,14 @@ export class RainOverlay extends LitElement {
 
     constructor() {
         super();
+        //create clock for timing
+        this.clock = new Clock();
+
+        //create the scene
+        this.scene = new Scene();
+        this.scene.fog = new Fog(0x000036, 0, this.minRange * 3);
+
+        //create camera
         this.camera = new PerspectiveCamera(
             35,
             window.innerWidth / window.innerHeight,
@@ -62,13 +70,38 @@ export class RainOverlay extends LitElement {
             2000
         );
         this.camera.position.z = 100;
-        this.scene = new Scene();
-        this.scene.fog = new Fog(0x000036, 0, this.minRange * 3);
+
+        //Add hemisphere light
+        let hemiLight = new HemisphereLight( 0xffffff, 0xffffff, 0.1 );
+        hemiLight.color.setHSL( 0.6, 0.6, 0.6 );
+        hemiLight.groundColor.setHSL( 0.1, 1, 0.4 );
+        hemiLight.position.set( 0, 50, 0 );
+        this.scene.add( hemiLight );
+
+        //Add directional light
+        let dirLight = new DirectionalLight( 0xffffff , 0.5);
+        dirLight.color.setHSL( 0.1, 1, 0.95 );
+        dirLight.position.set(this.visibleWidthAtZDepth(0, this.camera) / 2, this.visibleHeightAtZDepth(0, this.camera), 50);
+        dirLight.position.multiplyScalar( 10000 );
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        let d = 50;
+        dirLight.shadow.camera.left = -d;
+        dirLight.shadow.camera.right = d;
+        dirLight.shadow.camera.top = d;
+        dirLight.shadow.camera.bottom = -d;
+        dirLight.shadow.camera.far = 13500;
+        this.scene.add( dirLight );
+
+        //Add ambient light
+        const light = new AmbientLight(0x666666);
+        this.scene.add(light);
+
         this.renderer = new WebGLRenderer({
             antialias: true,
             alpha: true,
         });
-        this.scene.add(this.camera);
     }
 
     connectedCallback() {
@@ -82,7 +115,7 @@ export class RainOverlay extends LitElement {
 
         this.socket = sockets.client;
 
-        this.socket.on(BackendEvents.message, async (event: any) => {
+        this.socket.on(BackendEvents.weather, async (event: any) => {
             this.spawnBoxes(500);
         });
     }
@@ -91,41 +124,9 @@ export class RainOverlay extends LitElement {
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true;
+
         this.container3d.appendChild(this.renderer.domElement);
-
-        const light = new AmbientLight(0x666666);
-        this.scene.add(light);
-
-        const spotLight = new SpotLight(0xffffff);
-        spotLight.distance = 1000;
-        spotLight.position.set(this.visibleWidthAtZDepth(0, this.camera) / 2, this.visibleHeightAtZDepth(0, this.camera), 50);
-        spotLight.castShadow = true;
-        this.scene.add(spotLight);
-
-        this.box = new Mesh(
-            new BoxBufferGeometry(20, 20, 20, 20, 20),
-            new MeshStandardMaterial({
-                color: 0xffffff,
-                wireframe: false
-            })
-        );
-
-        this.box.name = 'box';
-        // this.scene.add(this.box);
-
-        const sphere = new Mesh(
-            new SphereBufferGeometry(15, 15, 15),
-            new MeshStandardMaterial({
-                color: 0x1c1cff,
-                wireframe: false,
-                opacity: 0.8,
-                transparent: true
-            })
-        );
-        sphere.name = 'sphere';
-
-        // this.scene.add(sphere);
-
+        
         this.renderFrame(0);
     }
 
@@ -146,13 +147,6 @@ export class RainOverlay extends LitElement {
     }
 
     renderFrame = (e: number) => {
-        // if (this.box!.position.z > this.maxZ || this.box!.position.z < this.minZ) this.incrementZ *= -1;
-        // this.box!.rotation.x += 0.05;
-        // this.box!.rotation.y += 0.05;
-        // this.box!.rotation.z += 0.05;
-        // this.box!.position.z += this.incrementZ;
-        // const sphere = this.scene.getObjectByName('sphere');
-        // if (sphere !== null && sphere !== undefined) sphere.rotation.y += 0.01;
         this.updateRainElements(e);
         this.renderer.render(this.scene, this.camera!);
         requestAnimationFrame((e) => this.renderFrame(e));
@@ -181,11 +175,6 @@ export class RainOverlay extends LitElement {
 
     static styles = style();
     rainElements: WeatherElement[] = [];
-
-    _handleClick = () => {
-        console.log('Clicked ME!');
-        this.spawnBoxes(10);
-    }
 
     visibleHeightAtZDepth = (depth: number, camera: PerspectiveCamera) => {
         // compensate for cameras not positioned at z=0
@@ -254,7 +243,6 @@ export class RainOverlay extends LitElement {
 
     render = () => {
         return html`
-            <!-- <div><button @click="${this._handleClick}">Click Me</button></div> -->
             <div id="context"></div>
         `;
     }
