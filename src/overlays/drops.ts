@@ -7,7 +7,7 @@ export class DropsOverlay extends LitElement {
 
   @property({ type: String })
   webServiceUrl: string = "http://localhost:5000/twitchHub";
-
+  
   @property({ type: String })
   webServiceType: SocketType = SocketType.signalR;
   
