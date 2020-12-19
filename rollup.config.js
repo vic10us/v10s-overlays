@@ -32,12 +32,18 @@ export default merge(baseConfig, {
   // input: './app.js',
   plugins: [
     importMetaAssets({
-      include: [
-        './src/**/*.png',
-        './src/**/*.svg',
-        './src/**/*.jpg',
+      transform: (assetBuffer, assetPath) => {
+        return assetPath.endsWith('.svg')
+          ? svgo.optimize(assetBuffer.toString()).then(({ data }) => data)
+          : assetBuffer;
+      },
+    }),
+    copy({
+      assets: [
+        './src/**/*.{png,svg,jpg,json}',
+        './images/**/*.{png,svg,jpg}',
       ]
     }),
-    copy({ patterns: './src/**/*.{png,svg,jpg,json}' })
+    // copy({ patterns: './src/**/*.{png,svg,jpg,json}' })
   ]
 });
