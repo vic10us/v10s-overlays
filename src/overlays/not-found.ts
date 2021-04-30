@@ -6,7 +6,7 @@ export class NotFound extends LitElement {
   render() {
     return html`
         <div>Page not found</div>
-   `;
+    `;
   }
 
 }
