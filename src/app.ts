@@ -1,4 +1,4 @@
-import { LitElement, html, css, property, customElement } from 'lit-element';
+import { LitElement, html, css, customElement } from 'lit-element';
 
 @customElement('v10s-overlays')
 export class App extends LitElement {
@@ -15,7 +15,7 @@ export class App extends LitElement {
   `;
 
   render() {
-    let hellostr = 'This is a test';
+    const hellostr = 'This is a test';
     return html`
       <main>
         ${hellostr}

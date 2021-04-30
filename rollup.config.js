@@ -2,7 +2,7 @@ import merge from 'deepmerge';
 // use createSpaConfig for bundling a Single Page App
 import { createSpaConfig } from '@open-wc/building-rollup';
 import { importMetaAssets } from '@web/rollup-plugin-import-meta-assets';
-import { copy } from '@web/rollup-plugin-copy';
+import copy from 'rollup-plugin-copy';
 
 // use createBasicConfig to do regular JS to JS bundling
 // import { createBasicConfig } from '@open-wc/building-rollup';
@@ -31,19 +31,15 @@ export default merge(baseConfig, {
   // optionally set a HTML template manually
   // input: './app.js',
   plugins: [
-    importMetaAssets({
-      transform: (assetBuffer, assetPath) => {
-        return assetPath.endsWith('.svg')
-          ? svgo.optimize(assetBuffer.toString()).then(({ data }) => data)
-          : assetBuffer;
-      },
-    }),
     copy({
-      assets: [
-        './src/**/*.{png,svg,jpg,json}',
-        './images/**/*.{png,svg,jpg}',
-      ]
+      targets: [
+        { src: './src/**/*.{png,svg,jpg,json}', dest: '/dist' },
+        { src: './images/**/*.{png,svg,jpg}', dest: '/dist' },
+      ],
+      // set flatten to false to preserve folder structure
+      flatten: false,
     }),
+    importMetaAssets({}),
     // copy({ patterns: './src/**/*.{png,svg,jpg,json}' })
   ]
 });
